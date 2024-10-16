@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
 import {
   AppBar, Toolbar, IconButton, Typography, Button, Card, CardContent, CardMedia,
-  Container, Grid, Box, Avatar, Paper, Rating, TextField
+  Container, Grid, Box, Avatar, Paper, Rating, TextField, Menu, MenuItem, List, ListItem, ListItemText
 } from '@mui/material';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 import MenuIcon from '@mui/icons-material/Menu';
 import TuneIcon from '@mui/icons-material/Tune';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
-import StarIcon from '@mui/icons-material/Star';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth } from './firebase';
@@ -48,11 +48,13 @@ const initialRestaurants = [
 const App = () => {
   const [restaurants, setRestaurants] = useState(initialRestaurants);
   const [favoriteRestaurants, setFavoriteRestaurants] = useState(
-    initialRestaurants.map((restaurant) => restaurant.isFavorite)
+    initialRestaurants.filter((restaurant) => restaurant.isFavorite)
   );
   const [searchQuery, setSearchQuery] = useState("");
   const [userRating, setUserRating] = useState(restaurants.map(() => null));
   const [currentUser, setCurrentUser] = useState(null);
+  const [darkMode, setDarkMode] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -66,17 +68,46 @@ const App = () => {
     return () => unsubscribe();
   }, []);
 
-  const toggleFavorite = (index) => {
-    const updatedFavorites = [...favoriteRestaurants];
-    updatedFavorites[index] = !updatedFavorites[index];
-    setFavoriteRestaurants(updatedFavorites);
+  const handleMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const toggleDarkMode = () => {
+    setDarkMode((prevMode) => !prevMode);
+    handleMenuClose();
+  };
+
+  const theme = createTheme({
+    palette: {
+      mode: darkMode ? 'dark' : 'light',
+    },
+  });
+
+  // Toggle the favorite status of a restaurant
+  const toggleFavorite = (index, event) => {
+    event.stopPropagation(); // Prevent navigation when clicking on heart
+
+    const updatedRestaurants = [...restaurants];
+    updatedRestaurants[index].isFavorite = !updatedRestaurants[index].isFavorite;
+
+    setRestaurants(updatedRestaurants);
+
+    // Update favoriteRestaurants based on the new favorite status
+    setFavoriteRestaurants(updatedRestaurants.filter((restaurant) => restaurant.isFavorite));
   };
 
   const handleSearchChange = (event) => {
     setSearchQuery(event.target.value);
   };
 
-  const handleRatingChange = (newRating, index) => {
+  // Handle rating changes without navigating
+  const handleRatingChange = (newRating, index, event) => {
+    event.stopPropagation(); // Prevent navigation when clicking on stars
+
     const updatedRestaurants = [...restaurants];
     const totalRatings = updatedRestaurants[index].userRatings + 1;
     const newAverageRating =
@@ -101,150 +132,173 @@ const App = () => {
   };
 
   return (
-    <Router>
-      <Box sx={{ display: 'flex' }}>
-        {/* Sidebar */}
-        <Box
-          sx={{
-            width: { xs: 70, sm: 80 },
-            height: '100vh',
-            backgroundColor: '#f3e5f5',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            py: 4,
-            position: 'fixed',
-            top: 0,
-            left: 0,
-          }}
-        >
-          <IconButton color="primary" sx={{ mb: 3, mt: 9 }}>
-            <StarIcon fontSize="large" />
-          </IconButton>
-          <Typography variant="caption" sx={{ mb: 2 }}> 
-            Label
-          </Typography>
-        </Box>
-
-        {/* Main Content Area */}
-        <Box
-          sx={{
-            flexGrow: 1,
-            px: { xs: 2, sm: 3 },
-            py: 4,
-            marginLeft: { xs: '70px', sm: '80px' },
-            mt: 8,
-          }}
-        >
-          {/* Top Navigation Bar */}
-          <AppBar
-            position="fixed"
-            elevation={0}
+    <ThemeProvider theme={theme}>
+      <Router>
+        <Box sx={{ display: 'flex' }}>
+          {/* Sidebar to display favorite restaurants */}
+          <Box
             sx={{
-              backgroundColor: '#f8e4f4',
-              borderBottom: '1px solid #e0e0e0',
-              width: '100%',
-              top: 0,
-              zIndex: 1000,
-              height: '64px',
-              px: { xs: 1, sm: 3 },
+              width: { xs: 70, sm: 200 },
+              height: '100vh',
+              backgroundColor: darkMode ? '#333' : '#f3e5f5',
               display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
+              flexDirection: 'column',
+              py: 4,
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              overflow: 'auto',
             }}
           >
-            <Toolbar sx={{ justifyContent: 'space-between', width: '100%' }}>
-              <IconButton edge="start" aria-label="menu">
-                <MenuIcon sx={{ color: 'black' }} />
-              </IconButton>
-              <Link to="/" style={{ textDecoration: 'none' }}>
-                <Typography variant="h6" sx={{ textAlign: 'center', flexGrow: 1, color: 'black', cursor: 'pointer' }}>
-                  www.Halal-Restaurant.com
-                </Typography>
-              </Link>
-
-              <Link to="/make-recipe" style={{ textDecoration: 'none' }}>
-                <Button sx={{ color: 'black' }}>Make a Recipe</Button>
-              </Link>
-
-              <Link to="/create-recipe" style={{ textDecoration: 'none' }}>
-                <Button
-                  sx={{
-                    backgroundColor: 'transparent',
-                    color: 'black',
-                    '&:hover': {
-                      backgroundColor: 'transparent',
-                      color: 'black'
-                    },
-                    textTransform: 'none'
-                  }}
+            <Typography variant="h6" sx={{ textAlign: 'center', mb: 2 }}>
+              Favorites
+            </Typography>
+            <List>
+              {favoriteRestaurants.map((restaurant, index) => (
+                <ListItem
+                  button
+                  key={index}
+                  component={Link}
+                  to={`/restaurant/${index}`}
                 >
-                  CREATE A RECIPE FOR ME
-                </Button>
-              </Link>
+                  <ListItemText primary={restaurant.name} />
+                </ListItem>
+              ))}
+            </List>
+          </Box>
 
-              <TextField
-                variant="outlined"
-                placeholder="Search"
-                size="small"
-                value={searchQuery}
-                onChange={handleSearchChange}
-                sx={{ mr: 2, width: 200 }}
-              />
-              <IconButton color="inherit">
-                <TuneIcon />
-              </IconButton>
+          {/* Main Content Area */}
+          <Box
+            sx={{
+              flexGrow: 1,
+              px: { xs: 2, sm: 3 },
+              py: 4,
+              marginLeft: { xs: '70px', sm: '200px' },
+              mt: 8,
+            }}
+          >
+            {/* Top Navigation Bar */}
+            <AppBar
+              position="fixed"
+              elevation={0}
+              sx={{
+                backgroundColor: darkMode ? '#444' : '#f8e4f4',
+                borderBottom: '1px solid #e0e0e0',
+                width: '100%',
+                top: 0,
+                zIndex: 1000,
+                height: '64px',
+                px: { xs: 1, sm: 3 },
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <Toolbar sx={{ justifyContent: 'space-between', width: '100%' }}>
+                <IconButton edge="start" aria-label="menu">
+                  <MenuIcon sx={{ color: darkMode ? 'white' : 'black' }} />
+                </IconButton>
+                <Link to="/" style={{ textDecoration: 'none' }}>
+                  <Typography variant="h6" sx={{ textAlign: 'center', flexGrow: 1, color: darkMode ? 'white' : 'black', cursor: 'pointer' }}>
+                    www.Halal-Restaurant.com
+                  </Typography>
+                </Link>
 
-              {/* Show login/logout buttons based on user state */}
-              {currentUser ? (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Typography variant="body1">Welcome, {currentUser.email}</Typography>
-                  <Button variant="outlined" color="inherit" onClick={handleLogout}>
-                    Logout
+                <Link to="/make-recipe" style={{ textDecoration: 'none' }}>
+                  <Button sx={{ color: darkMode ? 'white' : 'black' }}>Make a Recipe</Button>
+                </Link>
+
+                <Link to="/create-recipe" style={{ textDecoration: 'none' }}>
+                  <Button
+                    sx={{
+                      backgroundColor: 'transparent',
+                      color: darkMode ? 'white' : 'black',
+                      '&:hover': {
+                        backgroundColor: 'transparent',
+                        color: darkMode ? 'white' : 'black',
+                      },
+                      textTransform: 'none',
+                    }}
+                  >
+                    CREATE A RECIPE FOR ME
                   </Button>
-                </Box>
-              ) : (
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                  <Button variant="outlined" color="inherit" component={Link} to="/login">
-                    Login
-                  </Button>
-                  <Button variant="contained" color="primary" component={Link} to="/signup">
-                    Sign Up
-                  </Button>
-                </Box>
-              )}
-            </Toolbar>
-          </AppBar>
+                </Link>
 
-          <Routes>
-            {/* Home Page */}
-            <Route
-              path="/"
-              element={
-                <Container maxWidth="lg" sx={{ px: { xs: 0, sm: 3 } }}>
-                  {/* Main Banner Section */}
-                  <Card elevation={1} sx={{ borderRadius: 4, overflow: 'hidden', mb: 4 }}>
-                    <CardMedia
-                      component="img"
-                      height="250"
-                      image="https://source.unsplash.com/random/restaurant"
-                      alt="Halal Restaurants"
-                    />
-                    <CardContent sx={{ textAlign: 'center', p: { xs: 2, sm: 3 } }}>
-                      <Typography variant="h3" fontWeight="bold">
-                        Halal Restaurants
-                      </Typography>
-                      <Typography variant="subtitle1" color="textSecondary" sx={{ mt: 1, mb: 2 }}>
-                        <LocationOnIcon fontSize="small" sx={{ mr: 1 }} /> 20 restaurants nearby
-                      </Typography>
-                    </CardContent>
-                  </Card>
+                <TextField
+                  variant="outlined"
+                  placeholder="Search"
+                  size="small"
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  sx={{ mr: 2, width: 200, color: darkMode ? 'white' : 'black' }}
+                  InputProps={{ style: { color: darkMode ? 'white' : 'black' } }}
+                />
 
-                  {/* Restaurant List */}
-                  <Grid container spacing={3}>
-                    {filteredRestaurants.map((restaurant, index) => (
-                      <Grid item xs={12} key={index}>
-                        <Link to={`/restaurant/${index}`} style={{ textDecoration: 'none' }}>
+                {/* Tune button (also handles dark mode) */}
+                <IconButton color="inherit" onClick={handleMenuOpen}>
+                  <TuneIcon />
+                </IconButton>
+
+                {/* Tune menu with dark mode option */}
+                <Menu
+                  anchorEl={anchorEl}
+                  open={Boolean(anchorEl)}
+                  onClose={handleMenuClose}
+                >
+                  <MenuItem onClick={toggleDarkMode}>
+                    Toggle Dark Mode
+                  </MenuItem>
+                </Menu>
+
+                {/* Show login/logout buttons based on user state */}
+                {currentUser ? (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Typography variant="body1">Welcome, {currentUser.email}</Typography>
+                    <Button variant="outlined" color="inherit" onClick={handleLogout}>
+                      Logout
+                    </Button>
+                  </Box>
+                ) : (
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Button variant="outlined" color="inherit" component={Link} to="/login">
+                      Login
+                    </Button>
+                    <Button variant="contained" color="primary" component={Link} to="/signup">
+                      Sign Up
+                    </Button>
+                  </Box>
+                )}
+              </Toolbar>
+            </AppBar>
+
+            <Routes>
+              {/* Home Page */}
+              <Route
+                path="/"
+                element={
+                  <Container maxWidth="lg" sx={{ px: { xs: 0, sm: 3 } }}>
+                    {/* Main Banner Section */}
+                    <Card elevation={1} sx={{ borderRadius: 4, overflow: 'hidden', mb: 4 }}>
+                      <CardMedia
+                        component="img"
+                        height="250"
+                        image="https://source.unsplash.com/random/restaurant"
+                        alt="Halal Restaurants"
+                      />
+                      <CardContent sx={{ textAlign: 'center', p: { xs: 2, sm: 3 } }}>
+                        <Typography variant="h3" fontWeight="bold">
+                          Halal Restaurants
+                        </Typography>
+                        <Typography variant="subtitle1" color="textSecondary" sx={{ mt: 1, mb: 2 }}>
+                          <LocationOnIcon fontSize="small" sx={{ mr: 1 }} /> 20 restaurants nearby
+                        </Typography>
+                      </CardContent>
+                    </Card>
+
+                    {/* Restaurant List */}
+                    <Grid container spacing={3}>
+                      {filteredRestaurants.map((restaurant, index) => (
+                        <Grid item xs={12} key={index}>
                           <Paper
                             elevation={3}
                             sx={{
@@ -273,55 +327,49 @@ const App = () => {
                                 {restaurant.details}
                               </Typography>
 
-                              <Rating
-                                name={`read-only-${index}`}
-                                value={restaurant.rating}
-                                precision={0.1}
-                                readOnly
-                                sx={{ mt: 1 }}
-                              />
-
+                              {/* Star Rating */}
                               <Rating
                                 name={`user-rating-${index}`}
                                 value={userRating[index]}
-                                onChange={(event, newValue) => handleRatingChange(newValue, index)}
+                                onChange={(event, newValue) => handleRatingChange(newValue, index, event)}
                                 sx={{ mt: 1 }}
                               />
                             </Box>
+                            {/* Favorite Button */}
                             <Box sx={{ display: 'flex', alignItems: 'center' }}>
                               <IconButton
-                                onClick={() => toggleFavorite(index)}
+                                onClick={(event) => toggleFavorite(index, event)}
                                 color="primary"
                               >
-                                {favoriteRestaurants[index] ? <FavoriteIcon /> : <FavoriteBorderIcon />}
+                                {restaurant.isFavorite ? <FavoriteIcon /> : <FavoriteBorderIcon />}
                               </IconButton>
                             </Box>
                           </Paper>
-                        </Link>
-                      </Grid>
-                    ))}
-                  </Grid>
-                </Container>
-              }
-            />
-            {/* Restaurant Detail Page */}
-            <Route path="/restaurant/:id" element={<RestaurantDetail />} />
+                        </Grid>
+                      ))}
+                    </Grid>
+                  </Container>
+                }
+              />
+              {/* Restaurant Detail Page */}
+              <Route path="/restaurant/:id" element={<RestaurantDetail />} />
 
-            {/* Other Pages */}
-            <Route path="/make-recipe" element={<MakeRecipe />} />
-            <Route path="/chicken-tikka" element={<ChickenTikka />} />
-            <Route path="/hummus" element={<Hummus />} />
-            <Route path="/chicken-shawarma" element={<ChickenShawarma />} />
-            <Route path="/maqlouba" element={<Maqlouba />} />
-            <Route path="/zaatar-pie" element={<ZaatarPie />} />
-            <Route path="/fish-and-chips" element={<FishAndChips />} />
-            <Route path="/create-recipe" element={<CreateRecipe />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-          </Routes>
+              {/* Other Pages */}
+              <Route path="/make-recipe" element={<MakeRecipe />} />
+              <Route path="/chicken-tikka" element={<ChickenTikka />} />
+              <Route path="/hummus" element={<Hummus />} />
+              <Route path="/chicken-shawarma" element={<ChickenShawarma />} />
+              <Route path="/maqlouba" element={<Maqlouba />} />
+              <Route path="/zaatar-pie" element={<ZaatarPie />} />
+              <Route path="/fish-and-chips" element={<FishAndChips />} />
+              <Route path="/create-recipe" element={<CreateRecipe />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+            </Routes>
+          </Box>
         </Box>
-      </Box>
-    </Router>
+      </Router>
+    </ThemeProvider>
   );
 };
 
