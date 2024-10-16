@@ -13,16 +13,17 @@ import LocationOnIcon from '@mui/icons-material/LocationOn';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth } from './firebase';
 import RestaurantDetail from './RestaurantDetail';
-import MakeRecipe from './MakeRecipe'; 
-import ChickenTikka from './ChickenTikka'; 
-import Hummus from './Hummus'; 
+import MakeRecipe from './MakeRecipe';
+import ChickenTikka from './ChickenTikka';
+import Hummus from './Hummus';
 import ChickenShawarma from './ChickenShawarma';
 import Maqlouba from './Maqlouba';
 import ZaatarPie from './ZaatarPie';
-import FishAndChips from './FishAndChips';    
+import FishAndChips from './FishAndChips';
 import CreateRecipe from './CreateRecipe';
 import Login from './Login';
 import Signup from './Signup';
+import Location1 from './Location1'; // New Location page
 
 const initialRestaurants = [
   {
@@ -31,7 +32,7 @@ const initialRestaurants = [
     details: "Best Muslim restaurant in Jeddah",
     image: "https://upload.wikimedia.org/wikipedia/en/thumb/5/56/Al_Baik_Logo.svg/1200px-Al_Baik_Logo.svg.png",
     rating: 4.5,
-    userRatings: 100,
+    userRatings: 100, 
     isFavorite: false
   },
   {
@@ -85,18 +86,17 @@ const App = () => {
     palette: {
       mode: darkMode ? 'dark' : 'light',
     },
+    typography: {
+      fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+    }
   });
 
-  // Toggle the favorite status of a restaurant
   const toggleFavorite = (index, event) => {
-    event.stopPropagation(); // Prevent navigation when clicking on heart
-
+    event.stopPropagation();
     const updatedRestaurants = [...restaurants];
     updatedRestaurants[index].isFavorite = !updatedRestaurants[index].isFavorite;
 
     setRestaurants(updatedRestaurants);
-
-    // Update favoriteRestaurants based on the new favorite status
     setFavoriteRestaurants(updatedRestaurants.filter((restaurant) => restaurant.isFavorite));
   };
 
@@ -104,10 +104,8 @@ const App = () => {
     setSearchQuery(event.target.value);
   };
 
-  // Handle rating changes without navigating
   const handleRatingChange = (newRating, index, event) => {
-    event.stopPropagation(); // Prevent navigation when clicking on stars
-
+    event.stopPropagation();
     const updatedRestaurants = [...restaurants];
     const totalRatings = updatedRestaurants[index].userRatings + 1;
     const newAverageRating =
@@ -135,7 +133,7 @@ const App = () => {
     <ThemeProvider theme={theme}>
       <Router>
         <Box sx={{ display: 'flex' }}>
-          {/* Sidebar to display favorite restaurants */}
+          {/* Sidebar for favorite restaurants */}
           <Box
             sx={{
               width: { xs: 70, sm: 200 },
@@ -148,9 +146,10 @@ const App = () => {
               top: 0,
               left: 0,
               overflow: 'auto',
+              boxShadow: '3px 0px 10px rgba(0,0,0,0.1)',
             }}
           >
-            <Typography variant="h6" sx={{ textAlign: 'center', mb: 2 }}>
+            <Typography variant="h6" sx={{ textAlign: 'center', mb: 2, fontWeight: 'bold', color: darkMode ? 'white' : 'black' }}>
               Favorites
             </Typography>
             <List>
@@ -160,8 +159,14 @@ const App = () => {
                   key={index}
                   component={Link}
                   to={`/restaurant/${index}`}
+                  sx={{
+                    '&:hover': {
+                      backgroundColor: darkMode ? '#444' : '#ddd',
+                    },
+                    transition: 'background-color 0.3s',
+                  }}
                 >
-                  <ListItemText primary={restaurant.name} />
+                  <ListItemText primary={restaurant.name} sx={{ color: darkMode ? 'white' : 'black' }} />
                 </ListItem>
               ))}
             </List>
@@ -175,6 +180,9 @@ const App = () => {
               py: 4,
               marginLeft: { xs: '70px', sm: '200px' },
               mt: 8,
+              backgroundColor: darkMode ? '#222' : '#fff',
+              borderRadius: '8px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
             }}
           >
             {/* Top Navigation Bar */}
@@ -199,13 +207,13 @@ const App = () => {
                   <MenuIcon sx={{ color: darkMode ? 'white' : 'black' }} />
                 </IconButton>
                 <Link to="/" style={{ textDecoration: 'none' }}>
-                  <Typography variant="h6" sx={{ textAlign: 'center', flexGrow: 1, color: darkMode ? 'white' : 'black', cursor: 'pointer' }}>
+                  <Typography variant="h6" sx={{ textAlign: 'center', flexGrow: 1, color: darkMode ? 'white' : 'black', cursor: 'pointer', fontWeight: 'bold' }}>
                     www.Halal-Restaurant.com
                   </Typography>
                 </Link>
 
                 <Link to="/make-recipe" style={{ textDecoration: 'none' }}>
-                  <Button sx={{ color: darkMode ? 'white' : 'black' }}>Make a Recipe</Button>
+                  <Button sx={{ color: darkMode ? 'white' : 'black', textTransform: 'none', fontWeight: 'bold' }}>Make a Recipe</Button>
                 </Link>
 
                 <Link to="/create-recipe" style={{ textDecoration: 'none' }}>
@@ -215,9 +223,10 @@ const App = () => {
                       color: darkMode ? 'white' : 'black',
                       '&:hover': {
                         backgroundColor: 'transparent',
-                        color: darkMode ? 'white' : 'black',
+                        color: darkMode ? '#ddd' : '#000',
                       },
                       textTransform: 'none',
+                      fontWeight: 'bold',
                     }}
                   >
                     CREATE A RECIPE FOR ME
@@ -234,10 +243,28 @@ const App = () => {
                   InputProps={{ style: { color: darkMode ? 'white' : 'black' } }}
                 />
 
-                {/* Tune button (also handles dark mode) */}
-                <IconButton color="inherit" onClick={handleMenuOpen}>
-                  <TuneIcon />
-                </IconButton>
+<Button 
+  color="inherit" 
+  component={Link} 
+  to="/location1" 
+  sx={{ 
+    textTransform: 'none', 
+    fontWeight: 'bold', 
+    color: darkMode ? 'white' : 'black' // This ensures it's black in light mode
+  }}
+>
+  Location
+</Button>
+
+<IconButton 
+  color="inherit" 
+  onClick={handleMenuOpen}
+  sx={{ 
+    color: darkMode ? 'white' : 'black' // This ensures it's black in light mode
+  }}
+>
+  <TuneIcon />
+</IconButton>
 
                 {/* Tune menu with dark mode option */}
                 <Menu
@@ -253,17 +280,17 @@ const App = () => {
                 {/* Show login/logout buttons based on user state */}
                 {currentUser ? (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Typography variant="body1">Welcome, {currentUser.email}</Typography>
-                    <Button variant="outlined" color="inherit" onClick={handleLogout}>
+                    <Typography variant="body1" sx={{ color: darkMode ? 'white' : 'black' }}>Welcome, {currentUser.email}</Typography>
+                    <Button variant="outlined" color="inherit" onClick={handleLogout} sx={{ textTransform: 'none', fontWeight: 'bold' }}>
                       Logout
                     </Button>
                   </Box>
                 ) : (
                   <Box sx={{ display: 'flex', gap: 1 }}>
-                    <Button variant="outlined" color="inherit" component={Link} to="/login">
+                    <Button variant="outlined" color="inherit" component={Link} to="/login" sx={{ textTransform: 'none', fontWeight: 'bold' }}>
                       Login
                     </Button>
-                    <Button variant="contained" color="primary" component={Link} to="/signup">
+                    <Button variant="contained" color="primary" component={Link} to="/signup" sx={{ textTransform: 'none', fontWeight: 'bold' }}>
                       Sign Up
                     </Button>
                   </Box>
@@ -276,7 +303,7 @@ const App = () => {
               <Route
                 path="/"
                 element={
-                  <Container maxWidth="lg" sx={{ px: { xs: 0, sm: 3 } }}>
+                  <Container maxWidth="lg" sx={{ px: { xs: 0, sm: 3 }, mt: 8 }}>
                     {/* Main Banner Section */}
                     <Card elevation={1} sx={{ borderRadius: 4, overflow: 'hidden', mb: 4 }}>
                       <CardMedia
@@ -308,6 +335,7 @@ const App = () => {
                               borderRadius: 4,
                               transition: '0.3s',
                               '&:hover': { boxShadow: 6 },
+                              backgroundColor: darkMode ? '#333' : '#fff',
                             }}
                           >
                             <Avatar
@@ -317,7 +345,7 @@ const App = () => {
                               alt={restaurant.name}
                             />
                             <Box sx={{ flexGrow: 1 }}>
-                              <Typography variant="h6" fontWeight="bold">
+                              <Typography variant="h6" fontWeight="bold" sx={{ color: darkMode ? 'white' : 'black' }}>
                                 {restaurant.name}
                               </Typography>
                               <Typography variant="body2" color="textSecondary">
@@ -332,7 +360,7 @@ const App = () => {
                                 name={`user-rating-${index}`}
                                 value={userRating[index]}
                                 onChange={(event, newValue) => handleRatingChange(newValue, index, event)}
-                                sx={{ mt: 1 }}
+                                sx={{ mt: 1, color: darkMode ? 'white' : 'black' }}
                               />
                             </Box>
                             {/* Favorite Button */}
@@ -340,6 +368,7 @@ const App = () => {
                               <IconButton
                                 onClick={(event) => toggleFavorite(index, event)}
                                 color="primary"
+                                sx={{ color: restaurant.isFavorite ? 'red' : 'gray' }}
                               >
                                 {restaurant.isFavorite ? <FavoriteIcon /> : <FavoriteBorderIcon />}
                               </IconButton>
@@ -351,10 +380,8 @@ const App = () => {
                   </Container>
                 }
               />
-              {/* Restaurant Detail Page */}
               <Route path="/restaurant/:id" element={<RestaurantDetail />} />
-
-              {/* Other Pages */}
+              <Route path="/location1" element={<Location1 />} />
               <Route path="/make-recipe" element={<MakeRecipe />} />
               <Route path="/chicken-tikka" element={<ChickenTikka />} />
               <Route path="/hummus" element={<Hummus />} />
