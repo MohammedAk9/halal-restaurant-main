@@ -24,7 +24,7 @@ import CreateRecipe from './CreateRecipe';
 import Login from './Login';
 import Signup from './Signup';
 import Location1 from './Location1'; // New Location page
-
+//import logo from '.\src\logo.png' //error 
 const initialRestaurants = [
   {
     name: "AL-Baik",
@@ -306,12 +306,17 @@ const App = () => {
                   <Container maxWidth="lg" sx={{ px: { xs: 0, sm: 3 }, mt: 8 }}>
                     {/* Main Banner Section */}
                     <Card elevation={1} sx={{ borderRadius: 4, overflow: 'hidden', mb: 4 }}>
-                      <CardMedia
-                        component="img"
-                        height="250"
-                        image="https://source.unsplash.com/random/restaurant"
-                        alt="Halal Restaurants"
-                      />
+                    <CardMedia
+  component="img"
+  image="/logo.png"  // Reference the logo from the public folder
+  alt="Halal Restaurants"
+  sx={{
+    width: '100%',    // Fill the container's width
+    height: '100%',   // Fill the container's height
+    objectFit: 'contain',  // Preserve the aspect ratio and fit within the container
+  }}
+/>
+
                       <CardContent sx={{ textAlign: 'center', p: { xs: 2, sm: 3 } }}>
                         <Typography variant="h3" fontWeight="bold">
                           Halal Restaurants
