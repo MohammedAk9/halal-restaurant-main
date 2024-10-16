@@ -287,7 +287,7 @@ const App = () => {
                   </Box>
                 ) : (
                   <Box sx={{ display: 'flex', gap: 1 }}>
-                    <Button variant="outlined" color="inherit" component={Link} to="/login" sx={{ textTransform: 'none', fontWeight: 'bold' }}>
+                    <Button variant="outlined" color="primary" component={Link} to="/login" sx={{ textTransform: 'none', fontWeight: 'bold' }}>
                       Login
                     </Button>
                     <Button variant="contained" color="primary" component={Link} to="/signup" sx={{ textTransform: 'none', fontWeight: 'bold' }}>
